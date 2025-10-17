@@ -2,8 +2,8 @@
 node_modules/
 client/node_modules/
 
-# 빌드 결과물
-client/build/
+# 빌드 결과물 (로컬 개발용)
+# client/build/ - Vercel 배포를 위해 커밋에 포함
 build/
 dist/
 
