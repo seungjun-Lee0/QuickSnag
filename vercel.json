@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "installCommand": "npm install --production",
+  "buildCommand": "echo 'Skipping build - using committed files'",
   "builds": [
     {
       "src": "server.js",
