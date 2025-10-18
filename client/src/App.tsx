@@ -29,6 +29,7 @@ interface SearchResult {
   parcelFee?: number;     // 0: 배송비 별도, 1: 배송비 포함
   state?: number;         // 0: 판매중, 1: 예약중, 2: 판매완료
   platform?: string;     // 플랫폼 구분 (중고나라, 번개장터 등)
+  type?: string;         // 게시글 타입 (NFLEA_TRADE_ARTICLE: N플리마켓)
 }
 
 interface SearchResponse {
@@ -108,13 +109,16 @@ function App() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSources, setSelectedSources] = useState(['naver', 'joongna', 'bunjang', 'golmarket']);
+  const [selectedSources, setSelectedSources] = useState(['naver', 'joongna', 'bunjang']);
   
   // 다크모드 상태
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved === 'true';
   });
+  
+  // 스크롤 투 탑 버튼 표시 상태
+  const [showScrollTop, setShowScrollTop] = useState(false);
   
   // 다크모드 적용
   useEffect(() => {
@@ -126,8 +130,29 @@ function App() {
     localStorage.setItem('darkMode', isDarkMode.toString());
   }, [isDarkMode]);
   
+  // 스크롤 이벤트 리스너
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
   
   // 기존 공통 카테고리 상태 제거됨 - 플랫폼별 전용 카테고리만 사용
@@ -491,6 +516,23 @@ function App() {
     }
   };
 
+  // 정렬 변경 시 자동 재검색
+  const [initialLoad, setInitialLoad] = useState(true);
+  
+  useEffect(() => {
+    // 최초 로드 시에는 실행하지 않음
+    if (initialLoad) {
+      setInitialLoad(false);
+      return;
+    }
+    
+    // 검색어가 있고 결과가 있을 때만 자동 재검색
+    if (query.trim() && results.length > 0) {
+      handleSearch(null as any, 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.common.sort]);
+
   const handleSourceToggle = (source: string) => {
     setSelectedSources(prev => 
       prev.includes(source) 
@@ -505,12 +547,14 @@ function App() {
   // 페이지네이션 핸들러
   const handlePrevPage = () => {
     if (pagination?.hasPrevPage) {
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // 스크롤 최상단 이동
       handleSearch(null as any, currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
     if (pagination?.hasNextPage) {
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // 스크롤 최상단 이동
       handleSearch(null as any, currentPage + 1);
     }
   };
@@ -599,17 +643,19 @@ function App() {
 
   return (
     <div className="App">
+      {/* 다크모드 토글 버튼 - 항상 고정 */}
+      <button 
+        className="theme-toggle" 
+        onClick={toggleDarkMode}
+        aria-label="다크모드 토글"
+        title={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
+      >
+        {isDarkMode ? '☀️' : '🌙'}
+      </button>
+
       <header className="app-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleDarkMode}
-          aria-label="다크모드 토글"
-          title={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
-        >
-          {isDarkMode ? '☀️' : '🌙'}
-        </button>
         <h1>🔍 통합 중고거래 검색</h1>
-        <p>네이버 카페, 중고나라, 번개장터, 골마켓을 한 번에 검색하세요!</p>
+        <p>클릭 한 번으로 <br></br> 찾고 싶은 중고, 한 곳에서</p>
       </header>
 
       <main className="main-content">
@@ -660,7 +706,7 @@ function App() {
                   checked={selectedSources.includes('golmarket')}
                   onChange={() => handleSourceToggle('golmarket')}
                 />
-                골마켓 ⛳ <span style={{ color: '#e74c3c', fontSize: '0.85em', fontWeight: 'bold' }}>(카테고리 필수)</span>
+                골마켓 ⛳ <span className="required-text">(카테고리 필수)</span>
               </label>
             </div>
 
@@ -718,16 +764,7 @@ function App() {
             <div className="tab-content">
               {activeFilterTab === 'common' && (
                 <div className="common-filters">
-                  {/* 카테고리 필터 제거됨 - 플랫폼별 전용 카테고리 사용 권장 */}
-                  <div className="category-notice">
-                    <h4>카테고리 필터</h4>
-                    <p>더 정확한 검색을 위해 각 사이트별 카테고리를 사용해주세요:</p>
-                    <ul>
-                      <li>🔍 <strong>네이버 카페</strong>: 네이버 카페 탭에서 카테고리 선택</li>
-                      <li>🏪 <strong>중고나라</strong>: 중고나라 탭에서 카테고리 선택</li>
-                      <li>⚡ <strong>번개장터</strong>: 번개장터 탭에서 카테고리 선택</li>
-                    </ul>
-                  </div>
+
 
                   {/* 가격 */}
             <div className="price-filters">
@@ -2041,16 +2078,9 @@ function App() {
                   
                   {/* 골마켓 카테고리 선택 */}
                   <div className="filter-group category-filter-group">
-                    <h5 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h5>
                       ⛳ 카테고리 선택
-                      <span style={{ 
-                        fontSize: '0.75em', 
-                        padding: '0.2rem 0.5rem', 
-                        background: '#e74c3c', 
-                        color: 'white', 
-                        borderRadius: '12px',
-                        fontWeight: 'bold'
-                      }}>필수</span>
+                      <span className="required-badge">필수</span>
                     </h5>
                     <div className="golmarket-category-container">
                       <button 
@@ -2186,6 +2216,13 @@ function App() {
               >
                 필터 초기화
               </button>
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="mobile-search-button"
+              >
+                {loading ? '검색 중...' : '검색'}
+              </button>
             </div>
           </div>
         </form>
@@ -2290,8 +2327,20 @@ function App() {
                         }
                       }
                       
+                      // 골마켓: 판매완료와 판매취소만 오버레이 표시
+                      if (result.source === '골마켓' && result.saleStatus) {
+                        if (result.saleStatus === '판매완료' || result.saleStatus === '판매취소') {
+                          const statusText = result.saleStatus === '판매완료' ? '✅ 판매완료' : '❌ 판매취소';
+                          return (
+                            <div className="sale-status-overlay completed">
+                              {statusText}
+                            </div>
+                          );
+                        }
+                      }
+                      
                       // 다른 플랫폼 saleStatus 확인: 실제 상태 그대로 표시
-                      if (result.saleStatus && result.saleStatus !== '판매중') {
+                      if (result.source !== '골마켓' && result.saleStatus && result.saleStatus !== '판매중') {
                         const statusClass = result.saleStatus === '예약중' ? 'reserved' : 'completed';
                         const statusText = result.saleStatus === '예약중' ? '🔒 예약중' : '✅ 판매완료';
                         return (
@@ -2305,41 +2354,39 @@ function App() {
                     })()}
                   </div>
                   <div className="result-content">
+                    {/* 뱃지들 - 제일 위로 */}
+                    <div className="badges">
+                      {result.isSafePayment && (
+                        <span className="safe-payment-badge">🔒 안전결제</span>
+                      )}
+                      {(() => {
+                        // 번개장터 배송비 정보
+                        if (result.source === '번개장터' && result.shippingInfo) {
+                          if (result.shippingInfo === '무료배송') {
+                            return <span className="shipping-badge free">📦 무료배송</span>;
+                          } else if (result.shippingInfo === '배송비별도') {
+                            return <span className="shipping-badge separate">📦 배송비별도</span>;
+                          }
+                        }
+                        // 중고나라 배송비 정보
+                        if (result.source === '중고나라' && result.parcelFee !== undefined) {
+                          if (result.parcelFee === 0) {
+                            return <span className="shipping-badge free">📦 무료배송</span>;
+                          } else {
+                            return <span className="shipping-badge separate">📦 배송비별도</span>;
+                          }
+                        }
+                        return null;
+                      })()}
+                      {result.isBunjangCare && (
+                        <span className="bunjang-care-badge">🛡️ 번개케어</span>
+                      )}
+                      {result.inspection && !result.isBunjangCare && (
+                        <span className="inspection-badge">✅ 검수가능</span>
+                      )}
+                    </div>
+
                     <div className="result-main-info">
-                      <div className="price-section">
-                        <p className="result-price">{result.price}</p>
-                        <div className="badges">
-                          {result.isSafePayment && (
-                            <span className="safe-payment-badge">🔒 안전결제</span>
-                          )}
-                          {/* 배송비 정보 - 안전결제 배지 옆에 */}
-                          {(() => {
-                            // 번개장터 배송비 정보
-                            if (result.source === '번개장터' && result.shippingInfo) {
-                              if (result.shippingInfo === '무료배송') {
-                                return <span className="shipping-badge free">📦 무료배송</span>;
-                              } else if (result.shippingInfo === '배송비별도') {
-                                return <span className="shipping-badge separate">📦 배송비별도</span>;
-                              }
-                            }
-                            // 중고나라 배송비 정보
-                            if (result.source === '중고나라' && result.parcelFee !== undefined) {
-                              if (result.parcelFee === 0) { // parcelFee: 0 = 무료배송
-                                return <span className="shipping-badge free">📦 무료배송</span>;
-                              } else { // parcelFee: 1 = 배송비 별도
-                                return <span className="shipping-badge separate">📦 배송비별도</span>;
-                              }
-                            }
-                            return null;
-                          })()}
-                          {result.isBunjangCare && (
-                            <span className="bunjang-care-badge">🛡️ 번개케어</span>
-                          )}
-                          {result.inspection && !result.isBunjangCare && (
-                            <span className="inspection-badge">✅ 검수가능</span>
-                          )}
-                        </div>
-                      </div>
                       <h3 className="result-title">
                         <a href={result.link} target="_blank" rel="noopener noreferrer">
                           {result.title}
@@ -2351,42 +2398,31 @@ function App() {
                       {/* 추가 정보 표시 */}
                       {/* 모든 카드에 details 영역 표시 (위치정보는 항상 표시) */}
                       <div className="result-details">
-                        {/* 상단 왼쪽: 판매상태 + 물건상태 */}
+                        {/* 첫 번째 줄: 판매상태 + 찜 */}
                         <div className="top-left">
-                          {/* 판매상태 표시 */}
+                          {/* 판매상태 표시 - 모든 플랫폼에서 통일된 스타일 사용 */}
                           {result.source === '중고나라' && result.state !== undefined ? (
-                            <span className={`result-sale-status ${result.state === 0 ? 'on-sale' : result.state === 1 || result.state === 2 ? 'reserved' : 'completed'}`}>
+                            <span className={`result-sale-status ${result.state === 2 ? 'completed' : result.state === 1 ? 'reserved' : 'on-sale'}`}>
                               {result.state === 0 ? '💚 판매중' : 
-                               result.state === 1 || result.state === 2 ? '🔒 예약중' : 
-                               '✅ 판매완료'}
+                               result.state === 1 ? '🔒 예약중' : 
+                               result.state === 2 ? '✅ 판매완료' : '💚 판매중'}
                             </span>
                           ) : result.saleStatus && (
                             <span className={`result-sale-status ${result.saleStatus === '판매완료' ? 'completed' : result.saleStatus === '예약중' ? 'reserved' : 'on-sale'}`}>
                               {result.saleStatus === '판매완료' ? '✅' : result.saleStatus === '예약중' ? '🔒' : '💚'} {result.saleStatus}
                             </span>
                           )}
-                          {/* 상품 상태 정보 (판매상태 바로 옆에 별도로) */}
-                          {result.productCondition && (
-                            <span className="result-product-condition">🏷️ {result.productCondition}</span>
+                          {/* 찜 표시 */}
+                          {(result.source === '중고나라' || result.source === '번개장터') && result.wishCount !== undefined && (
+                            <span className="result-wish-count">❤️ {result.wishCount}</span>
                           )}
                         </div>
 
-                        {/* 상단 오른쪽: 찜만 표시 (중고나라/번개장터) 또는 배송방법 (네이버카페) */}
+                        {/* 상단 오른쪽: 숨김 */}
                         <div className="top-right">
-                          {(result.source === '중고나라' || result.source === '번개장터') && (
-                            <>
-                              {result.wishCount !== undefined && (
-                                <span className="result-wish-count">❤️ 찜 {result.wishCount}</span>
-                              )}
-                            </>
-                          )}
-                          {/* 네이버 카페 배송방법 */}
-                          {result.source === '네이버 카페' && result.delivery && (
-                            <span className="result-delivery">🚚 {result.delivery}</span>
-                          )}
                         </div>
 
-                        {/* 중간 중앙: 위치 정보 한 줄 */}
+                        {/* 두 번째 줄: 위치 정보만 */}
                         <div className="middle-center">
                           {result.region ? (
                             <span className="result-region">📍 {result.region}</span>
@@ -2395,34 +2431,38 @@ function App() {
                           )}
                         </div>
 
-                        {/* 하단 왼쪽: 빈 공간 */}
-                        <div className="bottom-left">
-                          {/* 현재 비어있음 */}
-                        </div>
+                        {/* 하단: 숨김 */}
+                        <div className="bottom-left"></div>
+                        <div className="bottom-right"></div>
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* 하단 오른쪽: 시간 */}
-                        <div className="bottom-right">
-                          {(() => {
-                            const timeAgoText = formatTimeAgo(result.timestamp);
-                            if (timeAgoText) {
-                              return <span className="result-time-ago">🕒 {timeAgoText}</span>;
-                            } else if (result.date) {
-                              return <span className="result-date">⏰ {result.date}</span>;
-                            }
-                            return null;
-                          })()}
-                        </div>
+                  <div className="result-price-section">
+                    {/* 가격 + 시간 */}
+                    <div className="price-section">
+                        <p className="result-price">{result.price}</p>
+                        {(() => {
+                          const timeAgoText = formatTimeAgo(result.timestamp);
+                          if (timeAgoText) {
+                            return <span className="result-time-ago">🕒 {timeAgoText}</span>;
+                          } else if (result.date) {
+                            return <span className="result-date">⏰ {result.date}</span>;
+                          }
+                          return null;
+                        })()}
                       </div>
                     
                       <div className="result-meta">
                         <span className={`source-badge ${result.source.replace(/\s+/g, '-').toLowerCase()}`}>
                           {result.source}
                         </span>
-                        {result.cafe && result.cafe !== result.source && (
-                          <span className="cafe-name">{result.cafe}</span>
+                        {(result.type === 'NFLEA_TRADE_ARTICLE' || (result.cafe && result.cafe !== result.source)) && (
+                          <span className="cafe-name">
+                            {result.type === 'NFLEA_TRADE_ARTICLE' ? 'N플리마켓' : result.cafe}
+                          </span>
                         )}
                       </div>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -2462,6 +2502,16 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* 위로 가기 버튼 */}
+      <button 
+        className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        aria-label="맨 위로"
+        title="맨 위로"
+      >
+        ↑
+      </button>
 
       <footer className="app-footer">
         <p>© 2024 통합 중고거래 검색 - 모든 권리 보유</p>

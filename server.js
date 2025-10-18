@@ -845,7 +845,8 @@ async function searchNaverCafe(query, filters = {}, page = 1) {
               imageCount: item.attachImageCount || 0,
               isSafePayment: isSafePayment,
               saleStatus: saleStatusText,
-              productCondition: productCondition
+              productCondition: productCondition,
+              type: article.type  // NFLEA_TRADE_ARTICLE 등의 타입 정보
             });
           }
         } catch (itemError) {
@@ -2086,6 +2087,24 @@ app.get('/api/joongna-categories', (req, res) => {
       success: false,
       error: '카테고리 정보를 가져오는 중 오류가 발생했습니다.',
       details: error.message
+    });
+  }
+});
+
+// 캐시 클리어 API
+app.post('/api/clear-cache', (req, res) => {
+  try {
+    cache.clear();
+    console.log('캐시가 모두 클리어되었습니다.');
+    res.json({ 
+      success: true, 
+      message: '캐시가 성공적으로 클리어되었습니다.' 
+    });
+  } catch (error) {
+    console.error('캐시 클리어 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '캐시 클리어 중 오류가 발생했습니다.' 
     });
   }
 });
