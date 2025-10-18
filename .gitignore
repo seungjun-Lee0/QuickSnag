@@ -4,7 +4,6 @@ client/node_modules/
 
 # 빌드 결과물 (로컬 개발용)
 # client/build/ - Vercel 배포를 위해 커밋에 포함
-build/
 dist/
 
 # 환경 변수

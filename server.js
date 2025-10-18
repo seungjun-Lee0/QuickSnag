@@ -913,16 +913,16 @@ async function searchGolmarket(query, filters = {}, page = 1) {
     console.log(`골마켓 API에서 "${query}" 검색 중...`);
     
     // 골마켓 카테고리 필터가 있는 경우
-    const menuId = filters.golmarketCategoryId || 23; // 기본값: 아이언
+    const menuId = filters.golmarketCategoryId || 22; // 기본값: 드라이버
     
-    // API URL
-    const apiUrl = `https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/14940923/menus/${menuId}/articles`;
+    // API URL (cafe-search-api 사용)
+    const apiUrl = `https://apis.naver.com/cafe-web/cafe-search-api/v1.0/cafes/14940923/search/articles`;
     const params = new URLSearchParams({
-      q: query, // 검색어 추가
+      query: query, // 검색어
+      perPage: '50', // 페이지당 개수
       page: page.toString(),
-      pageSize: '50',
-      sortBy: 'TIME',
-      viewType: 'L'
+      menuId: menuId.toString(),
+      views: 'MEMBER_LEVEL,COUNT,SALE_INFO,CAFE_MENU'
     });
 
     console.log(`골마켓 API URL: ${apiUrl}?${params.toString()}`);
@@ -955,11 +955,20 @@ async function searchGolmarket(query, filters = {}, page = 1) {
           const link = `https://cafe.naver.com/golmarket/${item.articleId}`;
           const cafeName = '골마켓';
           
-          // 이미지
-          const imageUrl = item.representImage || null;
+          // 이미지 (thumbnailImageUrl 사용)
+          let imageUrl = null;
+          if (item.thumbnailImageUrl) {
+            // 네이버 카페 이미지 URL 완성
+            imageUrl = item.thumbnailImageUrl.startsWith('http') 
+              ? item.thumbnailImageUrl 
+              : `https://cafeptthumb-phinf.pstatic.net${item.thumbnailImageUrl}`;
+          }
           
-          // 작성 시간
-          const timestamp = item.writeDateTimestamp || Date.now();
+          // 작성 시간 (addDate 파싱)
+          let timestamp = Date.now();
+          if (item.addDate) {
+            timestamp = new Date(item.addDate).getTime();
+          }
           
           // 조회수
           const readCount = item.readCount || 0;
@@ -968,10 +977,13 @@ async function searchGolmarket(query, filters = {}, page = 1) {
           const commentCount = item.commentCount || 0;
           
           // 좋아요 수
-          const likeCount = item.likeCount || 0;
+          const likeCount = item.likeCount || item.likeItCount || 0;
 
           // 작성자 정보
-          const nickName = item.writerInfo?.nickName || '익명';
+          const nickName = item.writerInfo?.nickname || '익명';
+          
+          // 판매 상태
+          const saleStatus = item.headName || '판매중';
 
           results.push({
             title,
@@ -983,8 +995,8 @@ async function searchGolmarket(query, filters = {}, page = 1) {
             timestamp,
             date: new Date(timestamp).toLocaleDateString('ko-KR'),
             region: nickName,
-            saleStatus: '판매중',
-            imageCount: item.hasImage ? 1 : 0,
+            saleStatus: saleStatus,
+            imageCount: item.attachImage ? (item.imageAttachCount || 1) : 0,
             platform: '골마켓'
           });
         } catch (err) {
