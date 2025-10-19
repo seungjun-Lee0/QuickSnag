@@ -128,18 +128,17 @@ function App() {
         const productId = productIdMatch[1];
         const bunjangScheme = `bunjang://product/${productId}`;
         
-        // 앱이 설치되어 있는지 확인하기 위해 앱 스킴으로 시도
-        const appLink = document.createElement('a');
-        appLink.href = bunjangScheme;
-        appLink.style.display = 'none';
-        document.body.appendChild(appLink);
-        appLink.click();
-        document.body.removeChild(appLink);
+        // iframe을 사용한 더 안정적인 앱 스킴 시도
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = bunjangScheme;
+        document.body.appendChild(iframe);
         
         // 앱이 없을 경우를 대비해 일정 시간 후 웹 링크로 이동
         setTimeout(() => {
+          document.body.removeChild(iframe);
           window.open(result.link, '_blank', 'noopener,noreferrer');
-        }, 1000);
+        }, 2000);
       } else {
         // 상품 ID를 찾을 수 없으면 웹 링크로 이동
         window.open(result.link, '_blank', 'noopener,noreferrer');
