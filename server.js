@@ -1634,7 +1634,7 @@ async function fetchNaverCafeCategories() {
     }
 
     const rootCategories = rootResponse.data.result.productCategoryList;
-    console.log(`${rootCategories.length}개의 루트 카테고리 찾음`);
+    // console.log(`${rootCategories.length}개의 루트 카테고리 찾음`);
 
     const allCategories = [];
     
@@ -1655,7 +1655,7 @@ async function fetchNaverCafeCategories() {
       // 하위 카테고리가 있는 경우 가져오기
       if (!rootCategory.lastLevel) {
         try {
-          console.log(`"${rootCategory.categoryName}" 하위 카테고리 가져오는 중...`);
+          // console.log(`"${rootCategory.categoryName}" 하위 카테고리 가져오는 중...`);
           
           const childResponse = await axios.get(`https://apis.naver.com/cafe-web/cafe-add-api/v1.0/categories/${rootCategory.categoryId}/child?used=true`, {
             headers: {
@@ -1670,7 +1670,7 @@ async function fetchNaverCafeCategories() {
 
           if (childResponse.data && childResponse.data.result && childResponse.data.result.productCategoryList) {
             const childCategories = childResponse.data.result.productCategoryList;
-            console.log(`"${rootCategory.categoryName}"에서 ${childCategories.length}개의 하위 카테고리 찾음`);
+            // console.log(`"${rootCategory.categoryName}"에서 ${childCategories.length}개의 하위 카테고리 찾음`);
             
             // 하위 카테고리들 추가
             for (const childCategory of childCategories) {
@@ -1688,7 +1688,7 @@ async function fetchNaverCafeCategories() {
               // 2단계 하위 카테고리도 확인 (필요한 경우)
               if (!childCategory.lastLevel) {
                 try {
-                  console.log(`"${childCategory.categoryName}" 2단계 하위 카테고리 가져오는 중...`);
+                  // console.log(`"${childCategory.categoryName}" 2단계 하위 카테고리 가져오는 중...`);
                   
                   const grandChildResponse = await axios.get(`https://apis.naver.com/cafe-web/cafe-add-api/v1.0/categories/${childCategory.categoryId}/child?used=true`, {
                     headers: {
@@ -1703,7 +1703,7 @@ async function fetchNaverCafeCategories() {
 
                   if (grandChildResponse.data && grandChildResponse.data.result && grandChildResponse.data.result.productCategoryList) {
                     const grandChildCategories = grandChildResponse.data.result.productCategoryList;
-                    console.log(`"${childCategory.categoryName}"에서 ${grandChildCategories.length}개의 2단계 하위 카테고리 찾음`);
+                    // console.log(`"${childCategory.categoryName}"에서 ${grandChildCategories.length}개의 2단계 하위 카테고리 찾음`);
                     
                     for (const grandChildCategory of grandChildCategories) {
                       allCategories.push({
@@ -1895,7 +1895,7 @@ app.get('/api/naver-categories/:categoryId/children', async (req, res) => {
   const { categoryId } = req.params;
   
   try {
-    console.log(`카테고리 ${categoryId}의 하위 카테고리 가져오는 중...`);
+    // console.log(`카테고리 ${categoryId}의 하위 카테고리 가져오는 중...`);
     
     const response = await axios.get(`https://apis.naver.com/cafe-web/cafe-add-api/v1.0/categories/${categoryId}/child?used=true`, {
       headers: {

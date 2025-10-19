@@ -110,6 +110,45 @@ function App() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSources, setSelectedSources] = useState(['naver', 'joongna', 'bunjang']);
+
+  // 모바일 디바이스 감지 함수
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           window.innerWidth <= 768;
+  };
+
+  // 앱 스킴을 통한 링크 처리 함수
+  const handleAppLink = (result: SearchResult, event: React.MouseEvent) => {
+    event.preventDefault();
+    
+    if (result.source === '번개장터' && isMobileDevice()) {
+      // 모바일에서만 번개장터 앱 스킴 시도
+      const productIdMatch = result.link.match(/\/products\/(\d+)/);
+      if (productIdMatch) {
+        const productId = productIdMatch[1];
+        const bunjangScheme = `bunjang://product/${productId}`;
+        
+        // 앱이 설치되어 있는지 확인하기 위해 앱 스킴으로 시도
+        const appLink = document.createElement('a');
+        appLink.href = bunjangScheme;
+        appLink.style.display = 'none';
+        document.body.appendChild(appLink);
+        appLink.click();
+        document.body.removeChild(appLink);
+        
+        // 앱이 없을 경우를 대비해 일정 시간 후 웹 링크로 이동
+        setTimeout(() => {
+          window.open(result.link, '_blank', 'noopener,noreferrer');
+        }, 1000);
+      } else {
+        // 상품 ID를 찾을 수 없으면 웹 링크로 이동
+        window.open(result.link, '_blank', 'noopener,noreferrer');
+      }
+    } else {
+      // 데스크톱 또는 다른 플랫폼은 기존 방식대로 처리
+      window.open(result.link, '_blank', 'noopener,noreferrer');
+    }
+  };
   
   // 다크모드 상태
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -547,14 +586,20 @@ function App() {
   // 페이지네이션 핸들러
   const handlePrevPage = () => {
     if (pagination?.hasPrevPage) {
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // 스크롤 최상단 이동
+      // 모바일과 데스크톱 모두에서 작동하도록 여러 방법 시도
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       handleSearch(null as any, currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
     if (pagination?.hasNextPage) {
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // 스크롤 최상단 이동
+      // 모바일과 데스크톱 모두에서 작동하도록 여러 방법 시도
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       handleSearch(null as any, currentPage + 1);
     }
   };
@@ -2370,10 +2415,23 @@ function App() {
                         }
                         // 중고나라 배송비 정보
                         if (result.source === '중고나라' && result.parcelFee !== undefined) {
-                          if (result.parcelFee === 0) {
+                          if (result.parcelFee === 1) {
                             return <span className="shipping-badge free">📦 무료배송</span>;
                           } else {
                             return <span className="shipping-badge separate">📦 배송비별도</span>;
+                          }
+                        }
+                        return null;
+                      })()}
+                      {(() => {
+                        // 네이버카페 거래방식 정보
+                        if (result.source === '네이버 카페' && result.delivery) {
+                          if (result.delivery.includes('직거래') && result.delivery.includes('택배')) {
+                            return <span className="trade-badge both">🤝 직거래/택배</span>;
+                          } else if (result.delivery.includes('직거래')) {
+                            return <span className="trade-badge meet">🤝 직거래</span>;
+                          } else if (result.delivery.includes('택배')) {
+                            return <span className="trade-badge delivery">📦 택배</span>;
                           }
                         }
                         return null;
@@ -2388,7 +2446,12 @@ function App() {
 
                     <div className="result-main-info">
                       <h3 className="result-title">
-                        <a href={result.link} target="_blank" rel="noopener noreferrer">
+                        <a 
+                          href={result.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={(e) => handleAppLink(result, e)}
+                        >
                           {result.title}
                         </a>
                       </h3>
