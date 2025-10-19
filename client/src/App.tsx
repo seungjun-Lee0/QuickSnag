@@ -110,44 +110,6 @@ function App() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSources, setSelectedSources] = useState(['naver', 'joongna', 'bunjang']);
-
-  // 모바일 디바이스 감지 함수
-  const isMobileDevice = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-           window.innerWidth <= 768;
-  };
-
-  // 앱 스킴을 통한 링크 처리 함수
-  const handleAppLink = (result: SearchResult, event: React.MouseEvent) => {
-    event.preventDefault();
-    
-    if (result.source === '번개장터' && isMobileDevice()) {
-      // 모바일에서만 번개장터 앱 스킴 시도
-      const productIdMatch = result.link.match(/\/products\/(\d+)/);
-      if (productIdMatch) {
-        const productId = productIdMatch[1];
-        const bunjangScheme = `bunjang://product/${productId}`;
-        
-        // iframe을 사용한 더 안정적인 앱 스킴 시도
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = bunjangScheme;
-        document.body.appendChild(iframe);
-        
-        // 앱이 없을 경우를 대비해 일정 시간 후 웹 링크로 이동
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          window.open(result.link, '_blank', 'noopener,noreferrer');
-        }, 2000);
-      } else {
-        // 상품 ID를 찾을 수 없으면 웹 링크로 이동
-        window.open(result.link, '_blank', 'noopener,noreferrer');
-      }
-    } else {
-      // 데스크톱 또는 다른 플랫폼은 기존 방식대로 처리
-      window.open(result.link, '_blank', 'noopener,noreferrer');
-    }
-  };
   
   // 다크모드 상태
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -2445,12 +2407,7 @@ function App() {
 
                     <div className="result-main-info">
                       <h3 className="result-title">
-                        <a 
-                          href={result.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          onClick={(e) => handleAppLink(result, e)}
-                        >
+                        <a href={result.link} target="_blank" rel="noopener noreferrer">
                           {result.title}
                         </a>
                       </h3>
