@@ -2,6 +2,32 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
+// Airbridge SDK 타입 선언
+declare global {
+  interface Window {
+    airbridge: {
+      init: (config: any) => void;
+      openDeeplink: (config: {
+        type: string;
+        deeplinks: {
+          ios?: string;
+          android?: string;
+          desktop?: string;
+        };
+        fallbacks?: {
+          ios?: string;
+          android?: string;
+          desktop?: string;
+        };
+        desktopPopUp?: boolean;
+      }) => void;
+      events: {
+        send: (eventName: string, data: any) => void;
+      };
+    };
+  }
+}
+
 interface SearchResult {
   title: string;
   link: string;
@@ -557,7 +583,7 @@ function App() {
     }
   };
 
-  // 중고나라 앱 딥링크 처리 함수 (Airbridge 지원)
+  // 중고나라 앱 딥링크 처리 함수 (Airbridge SDK 사용)
   const handleJoongnaLink = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     // 모바일이 아니면 그냥 진행
     if (!isMobile) {
@@ -570,81 +596,49 @@ function App() {
     // 예: https://web.joongna.com/product/220899033 -> 220899033
     const productIdMatch = url.match(/\/product\/(\d+)/);
     
-    if (productIdMatch && productIdMatch[1]) {
-      const productId = productIdMatch[1];
-      
-      // iOS/Android 감지
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      
-      console.log('📱 중고나라 앱 링크 시도:', { productId, isIOS, isAndroid });
-      
-      // 방법 1: Airbridge Universal Link 시도 (추천)
-      // 중고나라 실제 Airbridge 도메인으로 교체 필요
-      // 예: https://joongna.onelink.me/xxxxx 또는 https://joongna.app.link/xxxxx
-      // const airbridgeLink = `https://joongna.app.link/product/${productId}`;
-      
-      // 방법 2: 직접 딥링크 스킴 사용
-      const appLink = `joongna://product/${productId}`;
-      
-      // 앱으로 열기 시도
-      let appOpened = false;
-      
-      const fallbackTimer = setTimeout(() => {
-        if (!appOpened) {
-          // 앱이 설치되지 않았거나 열리지 않으면 웹으로 이동
-          console.log('⚠️ 앱이 열리지 않음, 웹으로 이동');
-          window.open(url, '_blank');
-        }
-      }, 2000);
-      
-      // 앱이 열리면 타이머 취소
-      const handleVisibilityChange = () => {
-        if (document.hidden) {
-          appOpened = true;
-          clearTimeout(fallbackTimer);
-          console.log('✅ 앱이 열림');
-        }
-      };
-      
-      const handleBlur = () => {
-        appOpened = true;
-        clearTimeout(fallbackTimer);
-        console.log('✅ 앱이 열림 (blur)');
-      };
-      
-      document.addEventListener('visibilitychange', handleVisibilityChange, { once: true });
-      window.addEventListener('blur', handleBlur, { once: true });
-      
-      // 앱 링크로 이동 시도
-      if (isIOS) {
-        // iOS: Universal Link를 지원하므로 직접 이동
-        window.location.href = appLink;
-      } else if (isAndroid) {
-        // Android: Intent 스킴 사용 (더 안정적)
-        const intentLink = `intent://product/${productId}#Intent;scheme=joongna;package=com.karrot.joongna;end`;
-        window.location.href = intentLink;
-        
-        // Intent가 실패하면 일반 딥링크 시도
-        setTimeout(() => {
-          if (!appOpened) {
-            window.location.href = appLink;
-          }
-        }, 500);
-      } else {
-        // 기타 모바일: 일반 딥링크 시도
-        window.location.href = appLink;
-      }
-      
-      // 클린업: 3초 후 이벤트 리스너 제거
-      setTimeout(() => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('blur', handleBlur);
-      }, 3000);
-      
-    } else {
-      // 상품 ID를 찾을 수 없으면 웹으로 이동
+    if (!productIdMatch || !productIdMatch[1]) {
       console.warn('⚠️ 상품 ID를 찾을 수 없음:', url);
+      window.open(url, '_blank');
+      return;
+    }
+
+    const productId = productIdMatch[1];
+    console.log('📱 중고나라 Airbridge 딥링크 시도:', productId);
+    
+    // Airbridge SDK가 로드되었는지 확인
+    if (typeof window.airbridge === 'undefined' || !window.airbridge.openDeeplink) {
+      console.warn('⚠️ Airbridge SDK가 로드되지 않음, 일반 링크로 이동');
+      window.open(url, '_blank');
+      return;
+    }
+
+    try {
+      // Airbridge SDK의 openDeeplink 메서드 사용 (중고나라 실제 설정)
+      window.airbridge.openDeeplink({
+        type: 'click',
+        deeplinks: {
+          // iOS 앱 딥링크 - 실제 중고나라 앱 스킴
+          ios: `joongna://product/${productId}`,
+          // Android 앱 딥링크
+          android: `joongna://product/${productId}`,
+          // 데스크톱용 (웹)
+          desktop: url
+        },
+        fallbacks: {
+          // 앱이 없을 때 iOS 폴백
+          ios: url,
+          // 앱이 없을 때 Android 폴백
+          android: url,
+          // 데스크톱 폴백
+          desktop: url
+        },
+        desktopPopUp: false // 데스크톱에서는 팝업 표시 안함
+      });
+      
+      console.log('✅ Airbridge openDeeplink 호출 완료');
+    } catch (error) {
+      console.error('❌ Airbridge openDeeplink 오류:', error);
+      // 오류 발생 시 폴백: 일반 링크로 이동
       window.open(url, '_blank');
     }
   };
