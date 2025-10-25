@@ -2,32 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-// Airbridge SDK 타입 선언
-declare global {
-  interface Window {
-    airbridge: {
-      init: (config: any) => void;
-      openDeeplink: (config: {
-        type: string;
-        deeplinks: {
-          ios?: string;
-          android?: string;
-          desktop?: string;
-        };
-        fallbacks?: {
-          ios?: string;
-          android?: string;
-          desktop?: string;
-        };
-        desktopPopUp?: boolean;
-      }) => void;
-      events: {
-        send: (eventName: string, data: any) => void;
-      };
-    };
-  }
-}
-
 interface SearchResult {
   title: string;
   link: string;
@@ -326,6 +300,30 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 번개장터 링크를 모바일 딥링크로 변환하는 함수
+  const convertBunjangLink = (link: string, source: string): string => {
+    // 번개장터가 아니거나 모바일이 아니면 원본 링크 반환
+    if (source !== '번개장터' || !isMobile) {
+      return link;
+    }
+
+    try {
+      // 번개장터 URL에서 product ID 추출
+      // 형식: https://m.bunjang.co.kr/products/{productId}
+      const productIdMatch = link.match(/\/products\/(\d+)/);
+      if (productIdMatch && productIdMatch[1]) {
+        const productId = productIdMatch[1];
+        // 앱 딥링크로 변환
+        return `https://bunjang.airbridge.io/goto?type=product&val=${productId}`;
+      }
+    } catch (error) {
+      console.error('번개장터 링크 변환 오류:', error);
+    }
+
+    // 변환 실패 시 원본 링크 반환
+    return link;
+  };
+
   // 기존 공통 카테고리 로딩 코드 제거됨 - 플랫폼별 전용 카테고리만 사용
 
   // 네이버 카페 카테고리 로딩 함수 (서버에서 미리 로딩된 데이터 사용)
@@ -580,66 +578,6 @@ function App() {
         joongna: mapping.joongna,
         bunjang: mapping.bunjang
       });
-    }
-  };
-
-  // 중고나라 앱 딥링크 처리 함수 (Airbridge SDK 사용)
-  const handleJoongnaLink = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
-    // 모바일이 아니면 그냥 진행
-    if (!isMobile) {
-      return;
-    }
-
-    e.preventDefault();
-    
-    // URL에서 상품 ID 추출
-    // 예: https://web.joongna.com/product/220899033 -> 220899033
-    const productIdMatch = url.match(/\/product\/(\d+)/);
-    
-    if (!productIdMatch || !productIdMatch[1]) {
-      console.warn('⚠️ 상품 ID를 찾을 수 없음:', url);
-      window.open(url, '_blank');
-      return;
-    }
-
-    const productId = productIdMatch[1];
-    console.log('📱 중고나라 Airbridge 딥링크 시도:', productId);
-    
-    // Airbridge SDK가 로드되었는지 확인
-    if (typeof window.airbridge === 'undefined' || !window.airbridge.openDeeplink) {
-      console.warn('⚠️ Airbridge SDK가 로드되지 않음, 일반 링크로 이동');
-      window.open(url, '_blank');
-      return;
-    }
-
-    try {
-      // Airbridge SDK의 openDeeplink 메서드 사용 (중고나라 실제 설정)
-      window.airbridge.openDeeplink({
-        type: 'click',
-        deeplinks: {
-          // iOS 앱 딥링크 - 실제 중고나라 앱 스킴
-          ios: `joongna://product/${productId}`,
-          // Android 앱 딥링크
-          android: `joongna://product/${productId}`,
-          // 데스크톱용 (웹)
-          desktop: url
-        },
-        fallbacks: {
-          // 앱이 없을 때 iOS 폴백
-          ios: url,
-          // 앱이 없을 때 Android 폴백
-          android: url,
-          // 데스크톱 폴백
-          desktop: url
-        },
-        desktopPopUp: false // 데스크톱에서는 팝업 표시 안함
-      });
-      
-      console.log('✅ Airbridge openDeeplink 호출 완료');
-    } catch (error) {
-      console.error('❌ Airbridge openDeeplink 오류:', error);
-      // 오류 발생 시 폴백: 일반 링크로 이동
-      window.open(url, '_blank');
     }
   };
 
@@ -2664,17 +2602,7 @@ function App() {
 
                     <div className="result-main-info">
                       <h3 className="result-title">
-                        <a 
-                          href={result.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          onClick={(e) => {
-                            // 중고나라인 경우 모바일에서 앱으로 연결
-                            if (result.source === '중고나라') {
-                              handleJoongnaLink(e, result.link);
-                            }
-                          }}
-                        >
+                        <a href={convertBunjangLink(result.link, result.source)} target="_blank" rel="noopener noreferrer">
                           {result.title}
                         </a>
                       </h3>

@@ -12,47 +12,6 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>🔍 통합 중고거래 검색</title>
-    
-    <!-- Airbridge SDK for 중고나라 딥링크 -->
-    <script type="text/javascript">
-      (function(c,b,e,f,m,g,p,q,r){
-        if(!c[f]){
-          var d={queue:[]};
-          m.concat(g).forEach(function(a){
-            var h=a.split("."),n=h.pop();
-            h.reduce(function(k,l){return k[l]=k[l]||{}},d)[n]=function(){
-              d.queue.push([a,arguments])
-            }
-          });
-          c[f]=d;
-          c=b.getElementsByTagName(e)[0];
-          b=b.createElement(e);
-          b.onerror=function(){
-            d.queue.filter(function(a){
-              return 0<=g.indexOf(a[0])
-            }).forEach(function(a){
-              a=a[1];
-              a=a[a.length-1];
-              "function"===typeof a&&a("error occur when load airbridge")
-            })
-          };
-          b.async=1;
-          b.src="//static.airbridge.io/sdk/latest/airbridge.min.js";
-          c.parentNode.insertBefore(b,c)
-        }
-      })(window,document,"script","airbridge",
-        "init fetchResource setBanner setDownload setDownloads openDeeplink setDeeplinks sendWeb setUserAgent setUserAlias addUserAlias setMobileAppData setUserId setUserEmail setUserPhone setUserAttributes clearUser setDeviceIFV setDeviceIFA setDeviceGAID events.send events.signIn events.signUp events.signOut events.purchased events.addedToCart events.productDetailsViewEvent events.homeViewEvent events.productListViewEvent events.searchResultViewEvent".split(" "),
-        ["events.wait"]
-      );
-      
-      // 중고나라 Airbridge 초기화
-      airbridge.init({
-        app: "joonggonara",
-        webToken: "7fe9ec336fbc431d896ed7ed90512927",
-        utmParsing: true,
-        useProtectedAttributionWindow: true
-      });
-    </script>
   </head>
   <body>
     <noscript>JavaScript를 활성화해야 이 앱을 사용할 수 있습니다.</noscript>
