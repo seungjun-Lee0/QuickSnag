@@ -313,8 +313,8 @@ function App() {
       const productIdMatch = link.match(/\/products\/(\d+)/);
       if (productIdMatch && productIdMatch[1]) {
         const productId = productIdMatch[1];
-        // 앱 딥링크로 변환
-        return `https://bunjang.airbridge.io/goto?type=product&val=${productId}`;
+        // 앱 딥링크로 변환 (https_deeplink=true 추가로 더 나은 앱 연동)
+        return `https://bunjang.airbridge.io/goto?type=product&val=${productId}&https_deeplink=true`;
       }
     } catch (error) {
       console.error('번개장터 링크 변환 오류:', error);
