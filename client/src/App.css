@@ -2378,3 +2378,103 @@ body {
   background: #a8a8a8;
 }
 
+/* 공통 카테고리 스타일 */
+.category-description {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.common-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.common-category-btn {
+  padding: 1rem 1.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.common-category-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--gradient-accent), transparent);
+  transition: left 0.5s ease;
+}
+
+.common-category-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-md);
+}
+
+.common-category-btn:hover::before {
+  left: 100%;
+}
+
+.common-category-btn.selected {
+  background: var(--button-primary);
+  color: white;
+  border-color: var(--button-primary);
+  font-weight: 600;
+  box-shadow: 0 4px 16px var(--shadow-lg);
+}
+
+.common-category-btn.selected:hover {
+  background: var(--button-primary-hover);
+  border-color: var(--button-primary-hover);
+  transform: translateY(-2px);
+}
+
+.common-category-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px var(--shadow-sm);
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .common-category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .common-category-btn {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    min-height: 48px; /* 터치 친화적 */
+  }
+
+  .category-description {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .common-category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .common-category-btn {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+

@@ -105,6 +105,102 @@ interface BunjangThirdCategory {
   disable_inspection?: boolean;
 }
 
+// 공통 카테고리 매핑 (네이버 카페, 중고나라, 번개장터)
+interface CommonCategoryMapping {
+  id: string;
+  name: string;
+  naver?: string;      // 네이버 카페 카테고리 ID
+  joongna?: string;    // 중고나라 카테고리 ID
+  bunjang?: string;    // 번개장터 카테고리 ID
+}
+
+const COMMON_CATEGORIES: CommonCategoryMapping[] = [
+  { 
+    id: 'digital', 
+    name: '디지털',
+    naver: '50000003',  // 디지털/가전
+    joongna: '6',       // 모바일/태블릿
+    bunjang: '600'      // 디지털
+  },
+  { 
+    id: 'electronics', 
+    name: '가전제품',
+    naver: '50000003',  // 디지털/가전 (네이버는 통합)
+    joongna: '7',       // 가전제품
+    bunjang: '610'      // 가전제품
+  },
+  { 
+    id: 'fashion', 
+    name: '패션/의류',
+    naver: '50000000',  // 패션의류
+    joongna: '2',       // 패션의류
+    bunjang: '310'      // 여성의류
+  },
+  { 
+    id: 'fashion_acc', 
+    name: '패션잡화',
+    naver: '50000001',  // 패션잡화
+    joongna: '3',       // 패션잡화
+    bunjang: '400'      // 패션 액세서리
+  },
+  { 
+    id: 'beauty', 
+    name: '뷰티/미용',
+    naver: '50000002',  // 화장품/미용
+    joongna: '4',       // 뷰티
+    bunjang: '410'      // 뷰티/미용
+  },
+  { 
+    id: 'sports', 
+    name: '스포츠/레저',
+    naver: '50000007',  // 스포츠/레저
+    joongna: '16',      // 스포츠
+    bunjang: '700'      // 스포츠/레저
+  },
+  { 
+    id: 'home', 
+    name: '가구/인테리어',
+    naver: '50000004',  // 가구/인테리어
+    joongna: '10',      // 가구/인테리어
+    bunjang: '810'      // 가구/인테리어
+  },
+  { 
+    id: 'baby', 
+    name: '유아/출산',
+    naver: '50000005',  // 출산/육아
+    joongna: '5',       // 출산/유아동
+    bunjang: '500'      // 유아동/출산
+  },
+  { 
+    id: 'book', 
+    name: '도서',
+    naver: '50005542',  // 도서
+    joongna: '14',      // 도서/음반/문구
+    bunjang: '900'      // 도서/티켓/문구
+  },
+  { 
+    id: 'hobby', 
+    name: '취미/키덜트',
+    naver: '50000009',  // 여가/생활편의
+    joongna: '13',      // 반려동물/취미
+    bunjang: '930'      // 키덜트
+  },
+  { 
+    id: 'life', 
+    name: '생활용품',
+    naver: '50000008',  // 생활/건강
+    joongna: '11',      // 리빙/생활
+    bunjang: '800'      // 생활/주방용품
+  },
+  { 
+    id: 'food', 
+    name: '식품',
+    naver: '50000006',  // 식품
+    joongna: '11',      // 리빙/생활 (식품 포함)
+    bunjang: '820'      // 식품
+  },
+];
+
 function App() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -385,6 +481,9 @@ function App() {
   // 필터 탭 상태
   const [activeFilterTab, setActiveFilterTab] = useState('common');
 
+  // 공통 카테고리 상태
+  const [selectedCommonCategory, setSelectedCommonCategory] = useState<string | null>(null);
+
   // 사이트별 필터 상태
   const [filters, setFilters] = useState({
     // 공통 필터 (카테고리 제거됨)
@@ -426,6 +525,129 @@ function App() {
       categoryId: '' // 골마켓 카테고리 ID
     }
   });
+
+  // 공통 카테고리 선택 핸들러
+  const handleCommonCategorySelect = (categoryId: string | null) => {
+    setSelectedCommonCategory(categoryId);
+    
+    if (!categoryId) {
+      // 전체 카테고리 선택 시 모든 카테고리 초기화
+      setFilters(prev => ({
+        ...prev,
+        naver: { ...prev.naver, categoryId: '' },
+        joongna: { ...prev.joongna, categoryId: '' },
+        bunjang: { ...prev.bunjang, categoryId: '' }
+      }));
+      return;
+    }
+
+    const mapping = COMMON_CATEGORIES.find(cat => cat.id === categoryId);
+    if (mapping) {
+      setFilters(prev => ({
+        ...prev,
+        naver: { ...prev.naver, categoryId: mapping.naver || '' },
+        joongna: { ...prev.joongna, categoryId: mapping.joongna || '' },
+        bunjang: { ...prev.bunjang, categoryId: mapping.bunjang || '' }
+      }));
+      console.log(`🎯 공통 카테고리 선택: ${mapping.name}`, {
+        naver: mapping.naver,
+        joongna: mapping.joongna,
+        bunjang: mapping.bunjang
+      });
+    }
+  };
+
+  // 중고나라 앱 딥링크 처리 함수 (Airbridge 지원)
+  const handleJoongnaLink = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+    // 모바일이 아니면 그냥 진행
+    if (!isMobile) {
+      return;
+    }
+
+    e.preventDefault();
+    
+    // URL에서 상품 ID 추출
+    // 예: https://web.joongna.com/product/220899033 -> 220899033
+    const productIdMatch = url.match(/\/product\/(\d+)/);
+    
+    if (productIdMatch && productIdMatch[1]) {
+      const productId = productIdMatch[1];
+      
+      // iOS/Android 감지
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      console.log('📱 중고나라 앱 링크 시도:', { productId, isIOS, isAndroid });
+      
+      // 방법 1: Airbridge Universal Link 시도 (추천)
+      // 중고나라 실제 Airbridge 도메인으로 교체 필요
+      // 예: https://joongna.onelink.me/xxxxx 또는 https://joongna.app.link/xxxxx
+      // const airbridgeLink = `https://joongna.app.link/product/${productId}`;
+      
+      // 방법 2: 직접 딥링크 스킴 사용
+      const appLink = `joongna://product/${productId}`;
+      
+      // 앱으로 열기 시도
+      let appOpened = false;
+      
+      const fallbackTimer = setTimeout(() => {
+        if (!appOpened) {
+          // 앱이 설치되지 않았거나 열리지 않으면 웹으로 이동
+          console.log('⚠️ 앱이 열리지 않음, 웹으로 이동');
+          window.open(url, '_blank');
+        }
+      }, 2000);
+      
+      // 앱이 열리면 타이머 취소
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
+          appOpened = true;
+          clearTimeout(fallbackTimer);
+          console.log('✅ 앱이 열림');
+        }
+      };
+      
+      const handleBlur = () => {
+        appOpened = true;
+        clearTimeout(fallbackTimer);
+        console.log('✅ 앱이 열림 (blur)');
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange, { once: true });
+      window.addEventListener('blur', handleBlur, { once: true });
+      
+      // 앱 링크로 이동 시도
+      if (isIOS) {
+        // iOS: Universal Link를 지원하므로 직접 이동
+        window.location.href = appLink;
+      } else if (isAndroid) {
+        // Android: Intent 스킴 사용 (더 안정적)
+        const intentLink = `intent://product/${productId}#Intent;scheme=joongna;package=com.karrot.joongna;end`;
+        window.location.href = intentLink;
+        
+        // Intent가 실패하면 일반 딥링크 시도
+        setTimeout(() => {
+          if (!appOpened) {
+            window.location.href = appLink;
+          }
+        }, 500);
+      } else {
+        // 기타 모바일: 일반 딥링크 시도
+        window.location.href = appLink;
+      }
+      
+      // 클린업: 3초 후 이벤트 리스너 제거
+      setTimeout(() => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('blur', handleBlur);
+      }, 3000);
+      
+    } else {
+      // 상품 ID를 찾을 수 없으면 웹으로 이동
+      console.warn('⚠️ 상품 ID를 찾을 수 없음:', url);
+      window.open(url, '_blank');
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent, pageNum: number = 1) => {
     if (e) e.preventDefault();
@@ -771,6 +993,30 @@ function App() {
               {activeFilterTab === 'common' && (
                 <div className="common-filters">
 
+                  {/* 공통 카테고리 선택 */}
+                  <div className="filter-group category-filter-group">
+                    <h4>통합 카테고리</h4>
+                    <p className="category-description">선택한 플랫폼의 관련 카테고리가 자동으로 설정됩니다</p>
+                    <div className="common-category-grid">
+                      <button
+                        type="button"
+                        className={`common-category-btn ${selectedCommonCategory === null ? 'selected' : ''}`}
+                        onClick={() => handleCommonCategorySelect(null)}
+                      >
+                        전체
+                      </button>
+                      {COMMON_CATEGORIES.map(category => (
+                        <button
+                          key={category.id}
+                          type="button"
+                          className={`common-category-btn ${selectedCommonCategory === category.id ? 'selected' : ''}`}
+                          onClick={() => handleCommonCategorySelect(category.id)}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* 가격 */}
             <div className="price-filters">
@@ -916,17 +1162,20 @@ function App() {
                                             type="button"
                                             className={`category-option-btn ${filters.naver.categoryId === mainCategory.categoryId ? 'selected' : ''}`}
                                             onClick={() => {
-                                              if (mainCategory.lastLevel || mainSubs.length === 0) {
-                                                setFilters(prev => ({
-                                                  ...prev,
-                                                  naver: { ...prev.naver, categoryId: mainCategory.categoryId }
-                                                }));
-                                                setShowNaverCategorySelector(false);
-                                              } else {
+                                              // 카테고리 선택
+                                              setFilters(prev => ({
+                                                ...prev,
+                                                naver: { ...prev.naver, categoryId: mainCategory.categoryId }
+                                              }));
+                                              // 하위 카테고리가 있으면 아코디언 토글
+                                              if (!mainCategory.lastLevel && mainSubs.length > 0) {
                                                 setExpandedMobileCategories(prev => ({
                                                   ...prev,
                                                   [mainCatKey]: !prev[mainCatKey]
                                                 }));
+                                              } else {
+                                                // 하위 카테고리가 없으면 드롭다운 닫기
+                                                setShowNaverCategorySelector(false);
                                               }
                                             }}
                                           >
@@ -951,17 +1200,20 @@ function App() {
                                                       type="button"
                                                       className={`category-option-btn ${filters.naver.categoryId === subCategory.categoryId ? 'selected' : ''}`}
                                                       onClick={() => {
-                                                        if (subCategory.lastLevel || thirdLevelCats.length === 0) {
-                                                          setFilters(prev => ({
-                                                            ...prev,
-                                                            naver: { ...prev.naver, categoryId: subCategory.categoryId }
-                                                          }));
-                                                          setShowNaverCategorySelector(false);
-                                                        } else {
+                                                        // 카테고리 선택
+                                                        setFilters(prev => ({
+                                                          ...prev,
+                                                          naver: { ...prev.naver, categoryId: subCategory.categoryId }
+                                                        }));
+                                                        // 하위 카테고리가 있으면 아코디언 토글
+                                                        if (!subCategory.lastLevel && thirdLevelCats.length > 0) {
                                                           setExpandedMobileCategories(prev => ({
                                                             ...prev,
                                                             [subCatKey]: !prev[subCatKey]
                                                           }));
+                                                        } else {
+                                                          // 하위 카테고리가 없으면 드롭다운 닫기
+                                                          setShowNaverCategorySelector(false);
                                                         }
                                                       }}
                                                     >
@@ -1402,17 +1654,20 @@ function App() {
                                             type="button"
                                             className={`category-option-btn ${filters.joongna.categoryId === categoryId ? 'selected' : ''}`}
                                             onClick={() => {
-                                              if (mainSubs.length === 0) {
-                                                setFilters(prev => ({
-                                                  ...prev,
-                                                  joongna: { ...prev.joongna, categoryId: categoryId }
-                                                }));
-                                                setShowJoongnaCategorySelector(false);
-                                              } else {
+                                              // 카테고리 선택
+                                              setFilters(prev => ({
+                                                ...prev,
+                                                joongna: { ...prev.joongna, categoryId: categoryId }
+                                              }));
+                                              // 하위 카테고리가 있으면 아코디언 토글
+                                              if (mainSubs.length > 0) {
                                                 setExpandedMobileCategories(prev => ({
                                                   ...prev,
                                                   [mainCatKey]: !prev[mainCatKey]
                                                 }));
+                                              } else {
+                                                // 하위 카테고리가 없으면 드롭다운 닫기
+                                                setShowJoongnaCategorySelector(false);
                                               }
                                             }}
                                           >
@@ -1438,17 +1693,20 @@ function App() {
                                                         type="button"
                                                         className={`category-option-btn ${filters.joongna.categoryId === subId ? 'selected' : ''}`}
                                                         onClick={() => {
-                                                          if (thirdLevelCats.length === 0) {
-                                                            setFilters(prev => ({
-                                                              ...prev,
-                                                              joongna: { ...prev.joongna, categoryId: subId }
-                                                            }));
-                                                            setShowJoongnaCategorySelector(false);
-                                                          } else {
+                                                          // 카테고리 선택
+                                                          setFilters(prev => ({
+                                                            ...prev,
+                                                            joongna: { ...prev.joongna, categoryId: subId }
+                                                          }));
+                                                          // 하위 카테고리가 있으면 아코디언 토글
+                                                          if (thirdLevelCats.length > 0) {
                                                             setExpandedMobileCategories(prev => ({
                                                               ...prev,
                                                               [subCatKey]: !prev[subCatKey]
                                                             }));
+                                                          } else {
+                                                            // 하위 카테고리가 없으면 드롭다운 닫기
+                                                            setShowJoongnaCategorySelector(false);
                                                           }
                                                         }}
                                                       >
@@ -1784,17 +2042,20 @@ function App() {
                                             type="button"
                                             className={`category-option-btn ${filters.bunjang.categoryId === mainCategory.id ? 'selected' : ''}`}
                                             onClick={() => {
-                                              if (mainCategory.subcategories.length === 0) {
-                                                setFilters(prev => ({
-                                                  ...prev,
-                                                  bunjang: { ...prev.bunjang, categoryId: mainCategory.id }
-                                                }));
-                                                setShowBunjangCategorySelector(false);
-                                              } else {
+                                              // 카테고리 선택
+                                              setFilters(prev => ({
+                                                ...prev,
+                                                bunjang: { ...prev.bunjang, categoryId: mainCategory.id }
+                                              }));
+                                              // 하위 카테고리가 있으면 아코디언 토글
+                                              if (mainCategory.subcategories.length > 0) {
                                                 setExpandedMobileCategories(prev => ({
                                                   ...prev,
                                                   [mainCatKey]: !prev[mainCatKey]
                                                 }));
+                                              } else {
+                                                // 하위 카테고리가 없으면 드롭다운 닫기
+                                                setShowBunjangCategorySelector(false);
                                               }
                                             }}
                                           >
@@ -1818,17 +2079,20 @@ function App() {
                                                         type="button"
                                                         className={`category-option-btn ${filters.bunjang.categoryId === subCategory.id ? 'selected' : ''}`}
                                                         onClick={() => {
-                                                          if (subCategory.subcategories.length === 0) {
-                                                            setFilters(prev => ({
-                                                              ...prev,
-                                                              bunjang: { ...prev.bunjang, categoryId: subCategory.id }
-                                                            }));
-                                                            setShowBunjangCategorySelector(false);
-                                                          } else {
+                                                          // 카테고리 선택
+                                                          setFilters(prev => ({
+                                                            ...prev,
+                                                            bunjang: { ...prev.bunjang, categoryId: subCategory.id }
+                                                          }));
+                                                          // 하위 카테고리가 있으면 아코디언 토글
+                                                          if (subCategory.subcategories.length > 0) {
                                                             setExpandedMobileCategories(prev => ({
                                                               ...prev,
                                                               [subCatKey]: !prev[subCatKey]
                                                             }));
+                                                          } else {
+                                                            // 하위 카테고리가 없으면 드롭다운 닫기
+                                                            setShowBunjangCategorySelector(false);
                                                           }
                                                         }}
                                                       >
@@ -2273,12 +2537,12 @@ function App() {
                             <img 
                               src={`/api/proxy-image?url=${encodeURIComponent(result.image)}`}
                               alt={result.title}
+                              referrerPolicy="no-referrer"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';
                                 target.parentElement!.innerHTML = '<div class="no-image">이미지 로딩 실패</div>';
                               }}
-                              loading="lazy"
                             />
                           );
                         }
@@ -2293,7 +2557,6 @@ function App() {
                               target.style.display = 'none';
                               target.parentElement!.innerHTML = '<div class="no-image">이미지 로딩 실패</div>';
                             }}
-                            loading="lazy"
                           />
                         );
                       })()
@@ -2407,7 +2670,17 @@ function App() {
 
                     <div className="result-main-info">
                       <h3 className="result-title">
-                        <a href={result.link} target="_blank" rel="noopener noreferrer">
+                        <a 
+                          href={result.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            // 중고나라인 경우 모바일에서 앱으로 연결
+                            if (result.source === '중고나라') {
+                              handleJoongnaLink(e, result.link);
+                            }
+                          }}
+                        >
                           {result.title}
                         </a>
                       </h3>

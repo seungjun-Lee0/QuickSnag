@@ -1,0 +1,112 @@
+[
+  {
+    "categoryId": "50000000",
+    "parentCategoryId": null,
+    "categoryName": "패션의류",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 1,
+    "fullPathLabel": "패션의류",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000001",
+    "parentCategoryId": null,
+    "categoryName": "패션잡화",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 2,
+    "fullPathLabel": "패션잡화",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000002",
+    "parentCategoryId": null,
+    "categoryName": "화장품/미용",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 3,
+    "fullPathLabel": "화장품/미용",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000003",
+    "parentCategoryId": null,
+    "categoryName": "디지털/가전",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 4,
+    "fullPathLabel": "디지털/가전",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000004",
+    "parentCategoryId": null,
+    "categoryName": "가구/인테리어",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 5,
+    "fullPathLabel": "가구/인테리어",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000005",
+    "parentCategoryId": null,
+    "categoryName": "출산/육아",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 6,
+    "fullPathLabel": "출산/육아",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000006",
+    "parentCategoryId": null,
+    "categoryName": "식품",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 7,
+    "fullPathLabel": "식품",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000007",
+    "parentCategoryId": null,
+    "categoryName": "스포츠/레저",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 8,
+    "fullPathLabel": "스포츠/레저",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000008",
+    "parentCategoryId": null,
+    "categoryName": "생활/건강",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 9,
+    "fullPathLabel": "생활/건강",
+    "deleted": false
+  },
+  {
+    "categoryId": "50000009",
+    "parentCategoryId": null,
+    "categoryName": "여가/생활편의",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 10,
+    "fullPathLabel": "여가/생활편의",
+    "deleted": false
+  },
+  {
+    "categoryId": "50005542",
+    "parentCategoryId": null,
+    "categoryName": "도서",
+    "categoryLevel": 1,
+    "lastLevel": false,
+    "exposureOrder": 12,
+    "fullPathLabel": "도서",
+    "deleted": false
+  }
+]
