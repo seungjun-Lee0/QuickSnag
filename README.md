@@ -36,7 +36,7 @@ Search listings from Naver Cafe, Joongna, and Bunjang all in one place.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/quicksnag.git
+git clone https://github.com/seungjun-Lee0/QuickSnag.git
 cd quicksnag
 ```
 

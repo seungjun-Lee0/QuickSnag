@@ -1,14 +1,14 @@
 {
-  "name": "secondhand-search",
+  "name": "quicksnag",
   "version": "1.0.0",
-  "description": "통합 중고거래 검색 플랫폼",
-  "main": "server.js",
+  "description": "Korea's unified secondhand marketplace",
+  "main": "server/server.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon server.js",
+    "server": "nodemon server/server.js",
     "client": "cd client && npm start",
     "build": "cd client && npm run build",
-    "start": "node server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "express": "^4.18.2",

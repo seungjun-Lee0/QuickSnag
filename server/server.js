@@ -2381,11 +2381,11 @@ app.get('/api/proxy-image', async (req, res) => {
 // 클라이언트 사이드 필터링 함수 제거됨 - 모든 필터링은 서버 API 레벨에서 처리
 
 // 정적 파일 제공
-app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(express.static(path.join(__dirname, '../client/build')));
 
 // 모든 라우트를 React 앱으로 리다이렉트 (API 제외)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
 // Vercel에서는 app.listen이 필요하지 않으므로 module.exports로 export
